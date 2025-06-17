@@ -6,7 +6,16 @@ from server.models.restaurant_pizza import RestaurantPizza
 from server.app import db
 
 restaurant_bp = Blueprint('restaurants', __name__)
-     @@ -17,14 +17,14 @@
+
+@restaurant_bp.route('/restaurants', methods=['GET'])
+def get_restaurants():
+    restaurants = Restaurant.query.all()
+    result = [restaurant.to_dict() for restaurant in restaurants]
+    return jsonify(result), 200
+
+@restaurant_bp.route('/restaurants/<int:id>', methods=['GET'])
+def get_restaurant(id):
+    restaurant = Restaurant.query.get(id)
     if not restaurant:
         return jsonify({"error": "Restaurant not found"}), 404
 
