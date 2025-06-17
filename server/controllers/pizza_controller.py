@@ -1,17 +1,11 @@
-from flask import Blueprint, make_response
-from server.models import Pizza
+from flask import Blueprint, jsonify
+from models.pizza import Pizza
+from server.models.pizza import Pizza
 
 pizza_bp = Blueprint('pizzas', __name__)
 
-@pizza_bp.route('/pizzas')
-def pizzas():
+@pizza_bp.route('/pizzas', methods=['GET'])
+def get_pizzas():
     pizzas = Pizza.query.all()
-    if len(pizzas) > 0:
-        response_body = pizzas.to_dict()
-        response_body = [pizza.to_dict()for pizza in pizzas]
-        response_status = 200
-    else:
-        response_body = {
-            'Message': 'Pizza could not be found'
-        }
-        response_status = 200
+    result = [pizza.to_dict() for pizza in pizzas]
+    return jsonify(result), 200

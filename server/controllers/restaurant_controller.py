@@ -1,45 +1,24 @@
-from server.models import Restaurant
-from server.config import db
-from flask import Blueprint, jsonify, make_response, request
+from flask import Blueprint, jsonify, request
+from models.restaurant import Restaurant
+from models.restaurant_pizza import RestaurantPizza
+from server.models.restaurant import Restaurant
+from server.models.restaurant_pizza import RestaurantPizza
+from server.app import db
 
-restaurants_bp = Blueprint('restaurants', __name__)
+restaurant_bp = Blueprint('restaurants', __name__)
+     @@ -17,14 +17,14 @@
+    if not restaurant:
+        return jsonify({"error": "Restaurant not found"}), 404
 
-@restaurants_bp.route("/restaurants")
-def restaurants():
-    restaurants = Restaurant.query.all()
+    return jsonify(restaurant.to_dict(include_pizzas=True)), 200
+    return jsonify(restaurant.to_dict()), 200
 
-    if len(restaurants) > 0:
-        response_body = [restaurant.to_dict() for restaurant in restaurants]
-        response_status = 200
+@restaurant_bp.route('/restaurants/<int:id>', methods=['DELETE'])
+def delete_restaurant(id):
+    restaurant = Restaurant.query.get(id)
+    if not restaurant:
+        return jsonify({"error": "Restaurant not found"}), 404
 
-    else:
-        response_body = {
-            'Message': 'No restaurants found'
-        }
-        response_status = 200
-
-    return make_response(jsonify(response_body), response_status)
-
-@restaurants_bp.route('/restaurants/<int:id>', methods=['GET', 'DELETE'])
-def restaurant(id):
-    restaurant = Restaurant.query.filter_by(id = id).first()
-
-    if restaurant:
-        if request.method == 'GET':
-            response_body = restaurant.to_dict()
-            response_status = 200
-
-        elif request.method == 'DELETE':
-            db.session.delete(restaurant)
-            db.session.commit()
-            response_body = 'Restaurant deleted'
-            response_body = ''
-            response_status = 204
-    else:
-        response_body = {
-            'error': 'Restaurant not found'
-        }
-        response_status = 404
-
-    return make_response(response_body, response_status)
-
+    db.session.delete(restaurant)
+    db.session.commit()
+    return '', 204

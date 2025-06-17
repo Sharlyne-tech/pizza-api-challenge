@@ -1,40 +1,38 @@
-from flask import Blueprint, make_response, request
-from server.models import Restaurant_Pizza
-from server.config import db
+from flask import Blueprint, jsonify, request
+from server.app import db
+from models.restaurant_pizza import RestaurantPizza
+from models.pizza import Pizza
+from models.restaurant import Restaurant
+from server.models.restaurant_pizza import RestaurantPizza
+from server.models.pizza import Pizza
+from server.models.restaurant import Restaurant
 
 restaurant_pizza_bp = Blueprint('restaurant_pizzas', __name__)
 
 @restaurant_pizza_bp.route('/restaurant_pizzas', methods=['POST'])
-def restaurant_pizzas():
+def create_restaurant_pizza():
     data = request.get_json()
-    if 1 > data.get('price') > 30:
-        return make_response({'errors':['Price must between 1 and 30']}, 400)
-    
-    new_restaurant_pizza = Restaurant_Pizza(
-        price=data.get('price'),
-        restaurant_id = request.form.get('restaurant_id'),
-        pizza_id = request.form.get('pizza_id')
-    )
-    db.session.add(new_restaurant_pizza)
-    db.session.commit
-        
     try:
-        new_restaurant_pizza = Restaurant_Pizza(
-            price=data.get('price'),
-            restaurant_id = data.get('restaurant_id'),
-            pizza_id = data.get('pizza_id')
-        )
-        db.session.add(new_restaurant_pizza)
+        price = int(data['price'])
+        pizza_id = int(data['pizza_id'])
+        restaurant_id = int(data['restaurant_id'])
+
+        if price < 1 or price > 30:
+            return jsonify({"errors": ["Price must be between 1 and 30"]}), 400
+
+        rp = RestaurantPizza(price=price, pizza_id=pizza_id, restaurant_id=restaurant_id)
+        db.session.add(rp)
         db.session.commit()
 
-        res = new_restaurant_pizza.to_dict()
-        stat = 200
-        return make_response(res, stat)
-    except ValueError as val:
-        return make_response({'errors':[f'{val}']}, 400)
+        response = {
+            "id": rp.id,
+            "price": rp.price,
+            "pizza_id": rp.pizza_id,
+            "restaurant_id": rp.restaurant_id,
+            "pizza": rp.pizza.to_dict(),
+            "restaurant": rp.restaurant.to_dict()
+        }
+        return jsonify(response), 201
 
-    res = new_restaurant_pizza.to_dict()
-    stat = 200
-    return make_response(res, stat)
-
-    
+    except (KeyError, ValueError):
+        return jsonify({"errors": ["Invalid input"]}), 400
