@@ -2,7 +2,6 @@ from server.app import db
 from sqlalchemy_serializer import SerializerMixin
 
 
-class Pizza(db.Model):
 class Pizza(db.Model,SerializerMixin):
     __tablename__='pizzas'
     serialize_rules=('-restaurant_pizzas',)
